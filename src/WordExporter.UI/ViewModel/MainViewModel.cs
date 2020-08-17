@@ -51,7 +51,7 @@ namespace WordExporter.UI.ViewModel
             //    // Code runs "for real"
             //}
 
-            TemplateFolder = StatePersister.Instance.Load<String>("main.TemplateFolder") ?? @"C:\develop\GitHub\AzureDevopsWordPlayground\src\WordExporter\Templates";
+            TemplateFolder = StatePersister.Instance.Load<String>("main.TemplateFolder") ?? @"D:\DEV\TestProject\AzureDevopsWordPlayground-0.6.0\src\WordExporter\Templates";
             Connect = new RelayCommand(ConnectMethod);
             GetQueries = new RelayCommand(GetQueriesMethod);
             Export = new RelayCommand(ExportMethod);

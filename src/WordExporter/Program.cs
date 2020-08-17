@@ -24,23 +24,24 @@ namespace WordExporter
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            var result = CommandLine.Parser.Default.ParseArguments<Options>(args)
-               .WithParsed<Options>(opts => options = opts)
-               .WithNotParsed<Options>((errs) => HandleParseError(errs));
+            //var result = CommandLine.Parser.Default.ParseArguments<Options>(args)
+            //   .WithParsed<Options>(opts => options = opts)
+            //   .WithNotParsed<Options>((errs) => HandleParseError(errs));
 
-            if (result.Tag != ParserResultType.Parsed)
-            {
-                Log.Logger.Error("Command line parameters error, press a key to continue!");
-                Console.ReadKey();
-                return;
-            }
+            //if (result.Tag != ParserResultType.Parsed)
+            //{
+            //    Log.Logger.Error("Command line parameters error, press a key to continue!");
+            //    Console.ReadKey();
+            //    return;
+            //}
 
-            ConnectionManager connection = new ConnectionManager(options.ServiceAddress, options.GetAccessToken());
-
-            //DumpAllIterations(connection);
-            //DumpAllTeamProjects(connection);
-            //TestExcelExtraction(connection);
-            if (String.IsNullOrEmpty(options.TemplateFolder))
+            string serviceAddress = System.Configuration.ConfigurationManager.AppSettings["ServiceAddress"];
+            string accessToken = System.Configuration.ConfigurationManager.AppSettings["AccessToken"];
+            string templateFolder = System.Configuration.ConfigurationManager.AppSettings["TemplateFolder"];
+            
+            ConnectionManager connection = new ConnectionManager(serviceAddress, accessToken);
+            
+            if (String.IsNullOrEmpty(templateFolder))
             {
                 PerformStandardIterationExport(connection);
             }
@@ -140,14 +141,12 @@ new[] { "task", "requirement", "feature", "epic" });
         private static void PerformStandardIterationExport(ConnectionManager connection)
         {
             WorkItemManger workItemManger = new WorkItemManger(connection);
-            workItemManger.SetTeamProject(options.TeamProject);
-            var workItems = workItemManger.LoadAllWorkItemForAreaAndIteration(
-                options.AreaPath,
-                options.IterationPath);
+            workItemManger.SetTeamProject(System.Configuration.ConfigurationManager.AppSettings["TeamProject"]);
+            var workItems = workItemManger.LoadAllWorkItemForAreaAndIteration(System.Configuration.ConfigurationManager.AppSettings["WitID"]);
 
             var fileName = Path.GetTempFileName() + ".docx";
             var templateManager = new TemplateManager("Templates");
-            var template = templateManager.GetWordDefinitionTemplate(options.TemplateName);
+            var template = templateManager.GetWordDefinitionTemplate(System.Configuration.ConfigurationManager.AppSettings["TemplateName"]);
             using (WordManipulator manipulator = new WordManipulator(fileName, true))
             {
                 AddTableContent(manipulator, workItems, template);
@@ -209,11 +208,11 @@ new[] { "task", "requirement", "feature", "epic" });
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
                 .WriteTo.File(
-                    "logs\\logs.txt",
+                    System.Configuration.ConfigurationManager.AppSettings["logDebugPath"],
                      rollingInterval: RollingInterval.Day
                 )
                 .WriteTo.File(
-                    "logs\\errors.txt",
+                    System.Configuration.ConfigurationManager.AppSettings["logErrorPath"],
                      rollingInterval: RollingInterval.Day,
                      restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error
                 )

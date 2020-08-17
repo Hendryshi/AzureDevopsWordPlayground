@@ -29,9 +29,17 @@ namespace WordExporter.Core.WorkItems
         /// <param name="areaPath"></param>
         /// <param name="iterationPath"></param>
         /// <returns></returns>
-        public List<WorkItem> LoadAllWorkItemForAreaAndIteration(string areaPath, string iterationPath)
+        public List<WorkItem> LoadAllWorkItemForAreaAndIteration(string witId)
         {
-            return ExecuteQuery($"SELECT * FROM WorkItems Where [System.AreaPath] UNDER '{areaPath}' AND [System.IterationPath] UNDER '{iterationPath}'");
+            StringBuilder query = new StringBuilder();
+            query.AppendLine($"SELECT * FROM WorkItems Where [System.TeamProject] = '{_teamProjectName}'");
+
+            if(!string.IsNullOrEmpty(witId))
+                query.AppendLine($" AND [ID] IN ({witId})");
+
+            return ExecuteQuery(query.ToString());
+            
+            
         }
 
         public List<WorkItem> ExecuteQuery(string wiqlQuery)
