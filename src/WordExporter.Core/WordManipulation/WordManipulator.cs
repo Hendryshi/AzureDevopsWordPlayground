@@ -185,9 +185,9 @@ namespace WordExporter.Core.WordManipulation
             Dictionary<string, Object> tokenList)
         {
             var realReplaceList = tokenList.ToDictionary(_ => CreateSubstitutionTokenFromName(_.Key), _ => _.Value);
-
-            var body = _document.MainDocumentPart.Document.Body;
-            SubstituteInParagraph(realReplaceList, body.Descendants<Paragraph>().ToList());
+			var body = _document.MainDocumentPart.Document.Body;
+			
+            SubstituteInParagraph(realReplaceList, body.Descendants<Paragraph>().ToList(), body);
 
             foreach (var header in _document.MainDocumentPart.HeaderParts)
             {
@@ -210,13 +210,27 @@ namespace WordExporter.Core.WordManipulation
         /// <param name="paragraphs"></param>
         private void SubstituteInParagraph(
             Dictionary<string, Object> realReplaceList,
-            IEnumerable<Paragraph> paragraphs)
+            IEnumerable<Paragraph> paragraphs,
+			Body body = null)
         {
+			bool removeNext = false;
+			int index = 0;
             foreach (var paragraph in paragraphs)
             {
-                //replace runs with entire code in it, it could happen that a single run
-                //contains the entire text.
-                var entireRuns = paragraph.Descendants<Run>().ToList();
+				//replace runs with entire code in it, it could happen that a single run
+				//contains the entire text.
+				index++;
+				if(paragraph.InnerText == string.Empty)
+					continue;
+
+				if(index > 2 && (!IsPartOfSection(realReplaceList["{{Work Item Type}}"].ToString(), paragraph.InnerText) || removeNext))
+				{
+					paragraph.Remove();
+					removeNext = !removeNext;
+					continue;
+				}
+				
+				var entireRuns = paragraph.Descendants<Run>().ToList();
                 foreach (var run in entireRuns)
                 {
                     String innerText = run.InnerText;
@@ -295,7 +309,7 @@ namespace WordExporter.Core.WordManipulation
                                 runAfter = new Run(new Text(textOfLastRun.Substring(endTokenPosition + 2)));
                             }
                             else
-                            {
+                             {
                                 runAfter = new Run(new Text(String.Empty));
                             }
 
@@ -331,8 +345,32 @@ namespace WordExporter.Core.WordManipulation
                 }
             }
         }
+		
+		private bool IsPartOfSection(string tyWIT, string innerText)
+		{
+			if(innerText.StartsWith("{{"))
+				return true;
 
-        private OpenXmlElement CreateElementFromValue(object value, String match)
+			String strSection = string.Empty;
+			if(tyWIT.ToLower() == "bug")
+				strSection = System.Configuration.ConfigurationManager.AppSettings["BugList"];
+			else if(tyWIT.ToLower() == "requirement")
+				strSection = System.Configuration.ConfigurationManager.AppSettings["ReqList"];
+			else
+				strSection = System.Configuration.ConfigurationManager.AppSettings["CommonList"];
+
+			List<String> lstSection = strSection.Split(',').ToList();
+
+			foreach(string section in lstSection)
+			{
+				if(innerText.ToLower().StartsWith(section.ToLower()))
+					return true;
+			}
+			return false;
+		}
+
+
+		private OpenXmlElement CreateElementFromValue(object value, String match)
         {
             if (value == null)
             {

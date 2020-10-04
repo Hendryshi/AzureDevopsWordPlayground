@@ -88,7 +88,7 @@ namespace WordExporter.Core.WorkItems
                 StringBuilder htmlComment = new StringBuilder();
                 foreach (var comment in comments.Comments)
                 {
-                    htmlComment.Append($"<b>Author:</b>{comment.RevisedBy.Name} in date {comment.RevisedDate.ToString("yyyy/MM/dd hh:mm")}");
+                    htmlComment.Append($"<b>Author:</b>{comment.RevisedBy.DisplayName} in date {comment.RevisedDate.ToString("yyyy/MM/dd hh:mm")}");
                     htmlComment.Append("<br>");
                     htmlComment.Append(comment.Text);
                 }

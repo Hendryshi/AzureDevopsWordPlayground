@@ -35,7 +35,22 @@ namespace WordExporter.Core.WorkItems
             query.AppendLine($"SELECT * FROM WorkItems Where [System.TeamProject] = '{_teamProjectName}'");
 
             if(!string.IsNullOrEmpty(witId))
-                query.AppendLine($" AND [ID] IN ({witId})");
+			{
+				String strWitId = String.Empty;
+				List<String> lstWitId = witId.Split(',').ToList();
+				foreach(string id in lstWitId)
+				{
+					if(id.Trim().Contains("-"))
+					{
+						List<String> lstSubWitId = id.Split('-').ToList();
+						for(int i = Int32.Parse(lstSubWitId[0].Trim()); i<= Int32.Parse(lstSubWitId[1].Trim()); i++)
+							strWitId += i + ",";
+					}
+					else
+						strWitId += id.Trim() + ",";
+				}
+				query.AppendLine($" AND [ID] IN ({strWitId.TrimEnd(',')})");
+			}
 
             return ExecuteQuery(query.ToString());
             
